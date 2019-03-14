@@ -1,0 +1,35 @@
+---
+title: "Lesson 4"
+author: "Scott White"
+date: "March 14, 2019"
+output: pdf_document
+---
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+```
+
+```{r}
+dat = read_csv("../data_output/surveys_cleaned.csv")
+```
+
+```{r}
+dp = "Dipodomys"
+
+dat %>%
+  filter(genus == dp, hindfoot_length <= 35)
+```
+
+```{r}
+dat %>%
+  filter(sex == "M", year == 1980) %>% 
+  select(month, day, species, hindfoot_length) %>% 
+  arrange(month, day)
+```
+
+```{r}
+dat %>%
+  group_by(hindfoot_length < 6) %>% 
+  summarise(mean = mean(hindfoot_length), n = n())
+```
+
