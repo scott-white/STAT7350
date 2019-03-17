@@ -1,0 +1,28 @@
+---
+title: "Assignment 1"
+author: "Scott White"
+date: "March 14, 2019"
+output: pdf_document
+---
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+t1 = read_csv("../data/table_1.csv")
+t2 = read_csv("../data/table_2.csv")
+t3 = read_csv("../data/table_3.csv")
+t4 = read_csv("../data/table_4.csv")
+t6 = read_csv("../data/table_6.csv")
+```
+
+```{r}
+t1;t2;t3;t4;t6
+```
+
+```{r}
+
+```
+
+
