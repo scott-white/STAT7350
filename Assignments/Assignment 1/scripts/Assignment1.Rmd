@@ -7,6 +7,7 @@ output: pdf_document
 
 ```{r}
 library(tidyverse)
+library(gridExtra)
 ```
 
 ```{r}
@@ -21,8 +22,147 @@ t6 = read_csv("../data/table_6.csv")
 t1;t2;t3;t4;t6
 ```
 
-```{r}
+Since tables 1, 2, and 3 deal with threatened countries, instead of dealing with three tibbles, lets rename some of the columns so we can combine them and keep the different rank information separate.
 
+```{r}
+# t1 <- rename(t1, overall_rank = rank)
+# t2 <- rename(t2, total_cost_rank = rank)
+# t3 <- rename(t3, prop_gdp_rank = rank)
+
+# threatened <- t1 %>% full_join(t2, by = "country") %>% 
+#   full_join(t3, by = "country")
+
+# Save the combined data
+# write_csv(threatened, path = "../threatened.csv")
+
+threatened <- read_csv("../threatened.csv")
 ```
+
+After combining the data, it's noted that the invasion_cost variable is similar from two data sets (though not the same, why?). So we can remove one of these columns to simplify our tibble.
+
+```{r}
+threatened <- threatened %>% select(-invasion_cost.y)
+
+# Rename the column we keep
+threatened <- threatened %>% rename(invasion_cost = invasion_cost.x)
+```
+
+
+The following shows that the original data does not contain only 124 countries, but many more than that. 
+```{r}
+setdiff(t1$country, t2$country)
+```
+
+
+## Question 1
+### Is there a consistent relationship between the three ranks?
+
+```{r}
+r1 <- threatened %>% ggplot(aes(x = overall_rank, y = total_cost_rank)) +
+  geom_point()
+
+r2 <- threatened %>% ggplot(aes(x = overall_rank, y = prop_gdp_rank)) +
+  geom_point()
+
+r3 <- threatened %>% ggplot(aes(x = prop_gdp_rank, y = total_cost_rank)) +
+  geom_point()
+
+grid.arrange(r1, r2, r3, ncol = 2)
+```
+
+Based on the rough plots above it's safe to say there isn't any relationship between the three different rankings.
+
+## Question 2
+### Are those countries that have a higher level of invasion threat more likely to have a higher or lower cost?
+
+```{r}
+threatened %>% ggplot(aes(x = invasion_threat, y = invasion_cost)) +
+  geom_point()
+```
+
+It doesn't appear as if there's a relationship on a linear scale. What about a log scale?
+
+```{r}
+threatened %>% ggplot(aes(x = invasion_threat, y = invasion_cost)) +
+  geom_point() +
+  scale_y_log10()
+```
+
+This doesn't appear to show much of a general pattern either, but it does give me a hint that log10 transformation may be quite useful to get points more appropriately spaced.
+
+## Question 3
+### Is there a relationship between invasion cost and the mean gdp of a country? It would make sense that a country with a larger mean GDP would have more chance of succumbing to larger financial costs if an invasive species were to spread throughout it.
+
+```{r}
+threatened %>% 
+  ggplot(aes(x = invasion_cost, y = gdp_mean)) +
+  geom_point()
+```
+
+A few points are throwing interpretation of most points off, so lets change the scale.
+
+```{r}
+threatened %>% 
+  ggplot(aes(x = invasion_cost, y = gdp_mean)) +
+  geom_point() +
+  scale_x_log10() +
+  scale_y_log10() +
+  geom_smooth(method = "lm")
+```
+
+It appears there is a bit of a relationship between invasion cost and mean GDP when both are compared on a log10 scale. This could be something to be investigated a bit more later.
+
+
+## Question
+### Investigating the source country data set
+
+```{r}
+t4 %>% 
+  ggplot(aes(x = rank, y = invasion_cost)) +
+  geom_point() +
+  scale_y_log10()
+```
+
+## Question
+### Investigating the species data set.
+
+```{r}
+t6 %>% ggplot(aes(x = rank, y = max_impact_percent)) +
+  geom_point()
+```
+
+The above plot is very interesting for the fact that the ranks are from 1-47, and all but 47 are repeated three times. This shows that the ranking of the species needs a bit more investigating.
+
+
+#Combining source and threatened data
+
+```{r}
+# source_threatened <- t4 %>% rename(source_invasion_cost = invasion_cost,
+#                                    source_rank = rank) %>% full_join(threatened, by = "country")
+
+#write_csv(source_threatened, path = "../source_threatened.csv")
+
+source_threatened <- read_csv("../source_threatened.csv")
+```
+
+## Question
+### Is there a relationship between the total cost of a source country and it's cost as a threatened country?
+
+```{r}
+source_threatened %>% ggplot(aes(x = source_invasion_cost, y = invasion_cost)) +
+  geom_point() +
+  scale_y_log10() + scale_x_log10()
+```
+
+## Question
+### Is there a relationship between the source rank and the total cost rank (should be similar as the previous grap I believe)
+
+```{r}
+source_threatened %>% 
+  ggplot(aes(x = source_rank, y = total_cost_rank)) +
+  geom_point()
+```
+
+There does appear to be a similar pattern, though it is weaker.
 
 
