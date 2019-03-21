@@ -145,14 +145,6 @@ The above plot is very interesting for the fact that the ranks are from 1-47, an
 source_threatened <- read_csv("../source_threatened.csv")
 ```
 
-## Question
-### Is there a relationship between the total cost of a source country and it's cost as a threatened country?
-
-```{r}
-source_threatened %>% ggplot(aes(x = source_invasion_cost, y = invasion_cost)) +
-  geom_point() +
-  scale_y_log10() + scale_x_log10()
-```
 
 ## Question
 ### Is there a relationship between the source rank and the total cost rank (should be similar as the previous grap I believe)
@@ -163,6 +155,49 @@ source_threatened %>%
   geom_point()
 ```
 
-There does appear to be a similar pattern, though it is weaker.
+There does appear to be a pattern, though not a strong one.
+
+
+## Question
+### Is there a relationship between the total cost of a source country and it's cost as a threatened country?
+
+```{r}
+# Make more fonts accessible
+# library(extrafont)
+# font_import()
+# loadfonts(device = "win")
+library(scales)
+
+# For some reason I can generate the ggplot shown below, but not in an rmarkdown document. So I have to build that graphic separately and include it manually for some reason.
+
+# source_threatened %>% ggplot(aes(x = source_invasion_cost, y = invasion_cost)) +
+#   geom_point(color = "#3399FF") +
+#   scale_y_log10(breaks = trans_breaks("log10", function(x) 10^x),
+#               labels = trans_format("log10", math_format(10^.x))) +
+#   scale_x_log10(breaks = trans_breaks("log10", function(x) 10^x),
+#               labels = trans_format("log10", math_format(10^.x))) +
+#   labs(title = "Relationship between the cost of invasive species in a country \n and the cost of invasive species from other countries") +
+#   xlab("Cost of invasive species on source country \n(log10 scale)") +
+#   ylab("Cost of invasive species on threatened country \n(log10 scale)") +
+#   theme(text = element_text(size = 14, family = "Times New Roman"),
+#         panel.background = element_blank(),
+#         panel.grid.major = element_line(linetype = "solid", color = "gray")) +
+#   geom_smooth(method = "lm")
+
+
+# ggsave("final_graph.png")
+```
+
+![Relationship between the cost of invasive species in a country and the cost of invasive species from other countries](final_graph.png)
+
+
+
+
+
+
+
+
+
+
 
 
