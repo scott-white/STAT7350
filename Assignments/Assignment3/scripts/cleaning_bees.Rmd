@@ -1,0 +1,165 @@
+---
+title: "Assignment3"
+author: "Scott White"
+date: '2019-04-02'
+output: pdf_document
+---
+
+```{r eval=FALSE}
+# install.packages("naniar")
+```
+
+
+```{r}
+library(tidyverse)
+library(naniar)
+library(here)
+```
+
+```{r}
+ # bees <- read_csv(url("https://www.microstatslab.ca/uploads/2/3/5/6/23564534/usfws_bee_survey_2013.csv"), col_type = cols())
+
+# write_csv(bees, "../data/bees.csv")
+
+# write_csv(bees, here(""))
+
+bees <- read_csv("../data/bees.csv")
+# bees <- read_csv(here(""))
+```
+
+```{r}
+bees # Dim: 6071 x 20
+```
+
+First I'll assess how many missing values there are
+
+```{r}
+bees <- bees %>% replace_with_na_all(condition = ~.x == "N/A")
+
+apply(bees, 2, function(x) mean(is.na(x)))
+```
+
+The columns from X14 to X20 contain only missing values, so we can remove them. The notes column also seems to repeat information from the County column, and the coordinates column doesn't give much information either.
+
+```{r}
+bees <- select(bees, Genus:Notes) %>% 
+  select(-Notes, -Coordinates)
+bees
+```
+
+Split the species column into two parts
+
+```{r}
+bees <- bees %>% separate(Species, into = c("GenusPart", "Species"), sep = " ", remove = FALSE,
+                  extra = "merge")
+bees
+```
+
+Checking is the Genus and GenusPart columns are equal.
+Note that the Augochlorella in the Genus column is incorrect. The other Genus column entries are correct.
+
+```{r}
+table(bees$Genus == bees$GenusPart)
+
+bees %>% select(Genus, GenusPart, Species) %>% 
+  filter(Genus != GenusPart)
+```
+
+From the below code we note that we need to change the Genus above to Augochlora.
+The other Genus are correct, so once we replace the last misspelled Genus we can remove the GenusPart column
+```{r}
+bees <- bees %>%
+  mutate(Genus = replace(Genus,
+                         str_detect(Genus, "Augochlorella") & str_detect(Species, "pura"),
+                         "Augochlora")) # Dim: 6071 x 12
+```
+
+```{r}
+bees <- bees %>%
+  select(-GenusPart)
+```
+
+
+Add an ID column so that we can use the join_ functions easily
+
+```{r}
+bees <- bees %>% add_column(ID = seq(nrow(bees)), .before = "Genus")
+bees
+```
+
+```{r}
+table(bees$`Date Sampled`)
+```
+
+```{r}
+modified_dates1 <- bees %>% filter(str_detect(`Date Sampled`, " ", negate = TRUE) &
+                  str_detect(`Date Sampled`, "-")) %>% 
+  select(ID, `Date Sampled`) %>%
+  separate(`Date Sampled`, into = c("Day", "Month"), sep = "-", remove = FALSE) %>% 
+  mutate(Date_temp = paste0(Month, ". ", Day)) %>% 
+  select(ID, Date_temp)
+
+bees <- bees %>% left_join(modified_dates1) %>% 
+  mutate(Date_new = if_else(is.na(Date_temp), `Date Sampled`, Date_temp))
+
+table(bees$Date_new)
+
+```
+
+Seperate the date into Month and Day. The day will be left alone for the moment uncleaned, and if we decide to use it we will come back and fix it.
+
+```{r}
+bees <- bees %>%
+  separate(Date_new, into = c("Month", "Date"), sep = '\\.', remove = FALSE)
+bees <- bees %>% mutate(Month = str_to_title(Month))
+bees
+```
+
+Cleaning up the Habitat variable
+
+```{r}
+bees <- bees %>% mutate(Habitat = str_to_title(Habitat))
+```
+
+```{r}
+habitats <- bees %>% select(Habitat)
+
+habitats[grepl("^Wetland", habitats$Habitat),] <- "Wetland Edge"
+
+habitats[grepl("^Brome", habitats$Habitat),] <- "Brome"
+
+habitats[grepl("^Remnant", habitats$Habitat),] <- "Remnant Prairie"
+
+habitats[grepl("^Restored", habitats$Habitat),] <- "Restored Prairie"
+
+habitats[grepl("^Savanna", habitats$Habitat),] <- "Savanna"
+
+habitats[grepl("^Tall Grass", habitats$Habitat),] <- "Tallgrass Prairie"
+
+habitats[grepl("^Reconstruc", habitats$Habitat),] <- "Reconstructed Prairie"
+
+habitats[grepl("Field", habitats$Habitat),] <- "Field"
+
+bees$Habitat <- as.vector(habitats$Habitat)
+```
+
+```{r}
+bees
+```
+
+# Removing the Date_temp and Date_new columns
+```{r}
+bees <- bees %>% select(-Date_new, -Date_temp)
+bees
+```
+
+Save the modified bees tibble
+```{r}
+write_csv(bees, here("Assignments/Assignment3/data_output/bees_modified.csv"))
+```
+
+
+
+
+
+

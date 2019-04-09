@@ -1,0 +1,139 @@
+---
+title: "7350 A3"
+author: "Jingyu Wang 7701969"
+date: "April 6, 2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+bees <- read_csv("E:/dropbox/Dropbox/Statistics/graduate course/stat 7350 biostats/7350 Assignment 3/Assignment3/data_output/cleaned_bees_columns_removed.csv")
+```
+
+# Gender/Genus
+
+```{r}
+# genus_count<-bees%>%group_by(Genus)%>%count(Genus)
+ggplot(data= bees, mapping= aes(Genus, fill = Gender)) +
+  geom_bar()+
+  theme(axis.text.x=element_text(angle = -45, hjust = 0)) +
+  coord_flip()
+```
+
+```{r}
+genus_count<-bees%>%count(Genus)%>%
+  filter(n>=250)%>%filter(n<=750)
+
+species_counts <- bees%>%
+  count(Species) %>%
+  filter(n>=50)
+
+bees_new<-bees%>%
+  filter(Species%in%species_counts$Species)%>%
+  filter(Genus%in%genus_count$Genus)
+```
+
+```{r}
+ggplot(data= bees_new, mapping= aes(x=Genus)) +
+  geom_bar()+
+  theme(axis.text.x=element_text(angle = -45, hjust = 0))
+```
+
+```{r}
+ggplot(data= bees_new, mapping= aes(x=Genus, fill = Gender)) +
+  geom_bar()+
+  theme(axis.text.x=element_text(angle = -45, hjust = 0))
+```
+
+```{r}
+ggplot(data= bees_new, mapping= aes(x=Genus, fill = Species)) +
+  geom_bar()+
+  theme(axis.text.x=element_text(angle = -45, hjust = 0))
+```
+
+```{r}
+ggplot(bees_new, mapping = aes(x=Species, fill = Gender)) + 
+  geom_bar()+
+  facet_wrap(~ Genus, scale = "free_y")+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = -45,hjust = 0))
+```
+
+
+
+```{r}
+habitat_count<-bees%>%count(Habitat)%>%drop_na()
+bees_new_H<-bees%>%
+  filter(Habitat%in%habitat_count$Habitat)
+
+ggplot(bees_new_H, aes(Habitat,fill = Gender)) +
+   geom_bar()+
+   theme(axis.text.x=element_text(angle = -45, hjust = 0)) +
+   coord_flip()
+```
+
+```{r}
+habitat_count_f<-bees%>%count(Habitat)%>%
+  filter(n>=300)%>%drop_na()
+
+species_counts <- bees%>% count(Species)%>%filter(n>=50)
+species_top10<- species_counts%>%top_n(10)
+
+month_f<-bees%>%count(Month)%>%drop_na()
+
+bees_new_f1<-bees%>%
+  filter(Species%in%species_top10$Species)%>%
+  filter(Habitat%in%habitat_count_f$Habitat)%>%
+  filter(Month%in%month_f$Month)
+
+ggplot(bees_new_f1, aes(Habitat,fill = Gender)) +
+   geom_bar()+
+   theme(axis.text.x=element_text(angle = -45, hjust = 0))
+```
+
+```{r}
+ggplot(bees_new_f1, aes(Habitat,fill = Species)) +
+   geom_bar()+
+   theme(axis.text.x=element_text(angle = -45, hjust = 0))
+```
+
+```{r}
+ggplot(bees_new_f1, mapping = aes(x=Species, fill = Gender)) + 
+  geom_bar()+
+  facet_wrap(~ Habitat, scale = "free_y")+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = -45,hjust = 0))
+```
+
+
+# different genus in different habitat
+
+```{r}
+# ggplot(data= bees, mapping= aes(Habitat, fill = Genus)) +
+#   geom_bar()+
+#   theme(axis.text.x=element_text(angle = -45, hjust = 0)) +
+#   coord_flip()
+```
+
+```{r}
+# bee_count<-bees%>% 
+#   count(Month, Gender, name = "Gender_Number")
+# 
+# ggplot(bee_count, aes(Month,Gender_Number, col=Gender))+
+#   geom_point()+
+#   geom_line()
+```
+
+```{r}
+# bee_count<-bees%>% count(Month, Genus, name = "Genus_Number")
+# ggplot(bee_count, aes(Month,Genus_Number, col=Genus))+
+#   geom_point()+
+#   geom_line()
+```

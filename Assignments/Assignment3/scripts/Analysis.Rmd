@@ -1,0 +1,230 @@
+---
+title: "Untitled"
+author: "Scott White"
+date: "April 5, 2019"
+output: pdf_document
+---
+
+```{r}
+library(here)
+library(tidyverse)
+```
+
+# Read in data
+```{r}
+bees <- read_csv(here("Assignments/Assignment3/data_output/cleaned_bees_columns_removed.csv"),
+                 col_types = cols(Division = col_character()))
+```
+
+```{r}
+bees <- bees %>% mutate(Month = as_factor(Month))
+bees <- bees %>% mutate(Month = fct_relevel(Month, levels = c("May", "Jun", "Jul", "Aug", "Sept")))
+
+bees
+```
+
+#
+```{r}
+strong_states <- c("Iowa", "Minnesota", "Missouri")
+weak_states <- c("Illinois", "Wisconsin")
+```
+
+
+# Checking how many monthly counts we have per state
+
+```{r}
+
+state_county_month <- bees %>% group_by(State, Month) %>% summarise(Count = n())
+
+state_county_month %>% drop_na %>%ggplot(aes(Month, Count)) +
+  geom_col(aes(fill = Month), position = "dodge") +
+  facet_wrap(.~State)
+```
+
+
+# Plot the number of records we have for each genus
+
+```{r}
+sort(table(bees$Genus))
+
+genus_count <- bees %>% group_by(Genus) %>% summarise(Count = n())
+
+genus_count %>% ggplot(aes(reorder(Genus, Count), Count)) +
+  geom_col() +
+  coord_flip()
+```
+
+# Keep the genus that have more than 100 counts
+
+```{r}
+genus_count %>% top_n(10, Count) %>%  ggplot(aes(reorder(Genus, Count), Count)) +
+  geom_col() +
+  coord_flip()
+```
+
+# Record the names of the top 10 genus counts (in descending order)
+
+```{r}
+top10_genus <- genus_count %>% top_n(10, Count) %>% arrange(desc(Count)) %>% select(Genus) %>% .$Genus
+```
+
+# Plot the number of genus per month
+
+```{r}
+month_genus_count <- bees %>% group_by(Month, Genus) %>% summarise(Count = n())
+```
+
+```{r}
+month_genus_count
+```
+
+When we plot Genus for each month we have to keep in mind we're not counting 130 from Lasioglossum
+
+```{r}
+month_genus_count %>% drop_na %>% filter(Genus %in% top10_genus) %>% 
+  ggplot(aes(Month, Count)) +
+  geom_col() +
+  facet_wrap(.~Genus, nrow = 2)
+```
+
+# Now lets plot the counts of the top 10 genus by state as well.
+
+```{r}
+state_month_genus_count <- bees %>% group_by(State, Month, Genus) %>% summarise(Count = n())
+```
+
+```{r}
+state_month_genus_count %>% filter(is.na(Month))
+```
+
+# A side benefit of comparing tables month_genus_count and state_month_genus_count is that I found out all of the missing Month rows are from Illinois
+
+```{r}
+state_month_genus_count %>% drop_na %>% filter(Genus %in% top10_genus) %>% 
+  ggplot(aes(Month, Count)) +
+  geom_col() +
+  facet_grid(State~Genus)
+```
+
+# Investigating the variety of bee species per geographical region
+
+```{r}
+bees
+```
+
+```{r}
+genus_species_state_habitat <- bees %>% group_by(Genus, Species, State, Habitat) %>% 
+  summarise(Count = n())
+
+genus_species_state_habitat
+```
+
+```{r}
+genus_species_contingency_table <- table(bees$Genus, bees$Species)
+
+str(genus_species_contingency_table)
+```
+
+## This table gives the number of records of each genus
+```{r}
+apply(genus_species_contingency_table, 1, sum)
+```
+
+## This table gives the number of different species in each genus
+```{r}
+apply(genus_species_contingency_table, 1, function(x){sum(x != 0)})
+```
+
+## This table gives the number of records of each species
+```{r}
+apply(genus_species_contingency_table, 2, sum)
+```
+
+## This table gives the number of different genus each species belongs to
+```{r}
+sort(apply(genus_species_contingency_table, 2, function(x){sum(x != 0)}))
+```
+
+# Create a histogram of the number of counts of records for each species type
+```{r}
+species_counts <- bees %>% group_by(Species) %>% summarise(Count = n()) %>% arrange(desc(Count))
+
+top10_species <- species_counts %>% top_n(10, Count) %>% .$Species
+
+species_counts %>% filter(Species %in% top10_species) %>% ggplot(aes(reorder(Species, Count), Count)) +
+  geom_col() + coord_flip()
+```
+
+
+
+# Graph the number of species in each region by month
+
+```{r}
+state_month_genus_species <- bees %>% group_by(State, Month, Genus, Species) %>% 
+  summarise(Count = n(),
+            `Num. Unique` = n_distinct(Species))
+
+state_month_genus_species
+```
+
+```{r}
+state_month_genus_species %>% drop_na() %>% ggplot(aes(Month, `Num. Unique`)) +
+  geom_col() +
+  facet_wrap(.~State)
+```
+
+```{r}
+fig_state_species_month_strong <- state_month_genus_species %>% filter(Species %in% top10_species) %>% drop_na() %>% filter(State %in% strong_states) %>% 
+  ggplot(aes(Month, Count)) +
+  geom_col() +
+  facet_grid(State~Species) +
+  theme_minimal() +
+  ggtitle("Investigating the top ten most recorded species",
+          subtitle = "Across the most prevalent states") +
+  theme(axis.text.x = element_text(angle = 90))
+  
+
+fig_state_species_month_strong
+  
+ggsave(filename = "fig_state_species_month_strong.jpeg",
+       plot = fig_state_species_month_strong,
+       path = here("Assignments", "Assignment3", "figures", "fig_state_species_month_strong.jpeg"),
+       dpi = 300)
+```
+
+
+```{r}
+
+```
+
+# Frequency of counts of the different types of habitats
+
+```{r}
+habitat_counts <- bees %>% group_by(Habitat) %>% summarise(Count = n()) %>% arrange(desc(Count))
+habitat_counts
+
+top_habitats <- habitat_counts %>% filter(Count >= 30) %>% .$Habitat
+```
+
+
+
+# Lets take a look at how the types and frequency of habitats has changed over time.
+
+```{r}
+bees %>% group_by(Month, State, Habitat) %>% summarise(Count=n()) %>% drop_na %>% 
+  filter(Habitat %in% top_habitats) %>% 
+  ggplot(aes(Month, Count)) +
+  geom_col() +
+  facet_grid(State~Habitat)
+```
+
+
+# State, Habitat, Month, Number of species found in that month
+```{r}
+bees %>% drop_na() %>% group_by(State, Habitat, Month) %>% summarise(Count = n()) %>% drop_na() %>% 
+  filter(Habitat %in% top_habitats) %>% 
+  ggplot(aes(Month, Count)) +
+  geom_col() +
+  facet_grid(State~Habitat)
+```
+

@@ -1,0 +1,53 @@
+---
+title: "Exploring Bees"
+author: "Scott White"
+date: "April 5, 2019"
+output: pdf_document
+---
+
+```{r}
+library(here)
+library(tidyverse)
+```
+
+# Read in data
+```{r}
+bees <- read_csv(here("Assignments/Assignment3/data_output/bees_modified.csv"),
+                 col_types = cols(Division = col_character()))
+```
+
+The failures for the Dates are or instances such as "19-20".
+Divison doesn't seem like it will be too useful and so we can leave it alone for now.
+```{r}
+failures <- problems(bees)
+failures %>% filter(col == "Date")
+```
+
+Removing the division and date columns
+```{r}
+bees <- bees %>% select(-`Date Sampled`, -Date)
+bees
+```
+
+Recoding worker bees as female, given the literature says worker bees are all females.
+
+```{r}
+bees <- bees %>% mutate(Gender = recode(Gender, Worker = "Female"))
+```
+
+Reordering the factor levels for Month
+
+```{r}
+bees <- bees %>% mutate(Month = as_factor(Month))
+bees <- bees %>% mutate(Month = fct_relevel(Month, levels = c("May", "Jun", "Jul", "Aug", "Sept")))
+```
+
+```{r}
+bees
+```
+
+
+Save the data again
+```{r}
+write_csv(bees, here("Assignments/Assignment3/data_output/cleaned_bees_columns_removed.csv"))
+```
