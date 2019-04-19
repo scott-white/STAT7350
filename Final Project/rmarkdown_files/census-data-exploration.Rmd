@@ -1,7 +1,7 @@
 ---
-title: "Census EDA"
+title: "City of Winnipeg Census EDA for 2001 and 2006"
 author: "Scott White"
-date: '2019-04-18'
+date: 'April 19, 2019'
 output: pdf_document
 ---
 
@@ -158,8 +158,8 @@ plot_facet_familysize_count <-  neighbourhood %>%
         legend.position = c(0.755, 0.3)) +
   xlab("Neighbourhood") +
   ylab("Total number of families (per neighbourhood)") +
-  ggtitle("Total number of families per neighbourhood in Winnipeg by family size",
-          "Ordered by increasing number of total families per neighbourhood (Neighbourhoods not listed)") +
+  ggtitle("Total number of families per neighbourhood by family size",
+          "Ordered by increasing number of total families per neighbourhood") +
   scale_color_discrete(name = "Census year")
 
 plot_facet_familysize_count
@@ -200,7 +200,7 @@ plot_facet_familysize_differences <- family_size_differences %>%
         axis.ticks.x = element_blank()) +
   xlab("Neighbourhood") +
   ylab("Difference (per neighbourhood)") +
-  ggtitle("Difference in total number of families per neighbourhood in Winnipeg \n (2001 to 2016)",
+  ggtitle("Difference in total number of families per neighbourhood \n (2001 to 2016)",
           "Ordered by increasing average total family size per neighbourhood") +
     facet_wrap(`Family Size`~., labeller = difference_facets)
 plot_facet_familysize_differences
