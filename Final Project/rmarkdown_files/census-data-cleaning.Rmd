@@ -1,0 +1,58 @@
+---
+title: "Census Data Cleaning"
+author: "Scott White"
+date: '2019-04-18'
+output: pdf_document
+---
+
+```{r eval=FALSE}
+install.packages(c("Hmisc", "tidyverse", "here"))
+```
+
+
+```{r message=FALSE, warning=FALSE}
+library(Hmisc)
+library(tidyverse)
+library(here)
+```
+
+```{r}
+Data <- read_csv(here("Final Project", "data", "Census_-_Census_Families.csv"),
+                 col_types = cols(
+                   `Census Year` = col_factor(),
+                   `Boundary Name` = col_character(),
+                   `Boundary Type` = col_character(),
+                   .default = col_double()),
+                 na = "-")
+```
+
+
+Remove the variables: Boundary Number
+```{r}
+Data <- Data %>% select(-`Boundary Number`)
+```
+
+```{r}
+Data
+```
+
+
+Get a list of all areas that do not have census data for both 2001 and 2006
+```{r}
+single_records <- Data %>% group_by(`Boundary Name`) %>% summarise(Count = n()) %>% 
+  filter(Count != 2) %>%
+  select(`Boundary Name`) %>% 
+  as_vector()
+```
+
+Remove the entries that are indicated by the single_records variable.
+
+```{r}
+Data <- Data %>% filter(`Boundary Name` %nin% single_records)
+```
+
+
+Save the cleaned data
+```{r}
+write_csv(Data, here("Final Project", "data_output", "cleaned.csv"))
+```

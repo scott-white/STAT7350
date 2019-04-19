@@ -1,0 +1,5 @@
+FamSize,statistic,p.value,method
+Size 2 Diff,0.9507196504824058,4.0197418659876425e-6,Shapiro-Wilk normality test
+Size 3 Diff,0.9038681305474932,1.0041016619371098e-9,Shapiro-Wilk normality test
+Size 4 Diff,0.8574672661021218,2.5866689149158562e-12,Shapiro-Wilk normality test
+Size Over 4 Diff,0.9756502549478587,0.0022089628260472433,Shapiro-Wilk normality test
